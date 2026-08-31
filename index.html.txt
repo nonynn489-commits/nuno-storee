@@ -1,0 +1,94 @@
+bash -lc rm -rf /mnt/data/love-stars-complete && mkdir -p /mnt/data/love-stars-complete/{app,public} && cat > /mnt/data/love-stars-complete/package.json <<'EOF'
+{"scripts":{"dev":"next dev","build":"next build","start":"next start"},"dependencies":{"next":"latest","react":"latest","react-dom":"latest"},"devDependencies":{"typescript":"latest","@types/node":"latest","@types/react":"latest","@types/react-dom":"latest"}}
+EOF
+cat > /mnt/data/love-stars-complete/next.config.mjs <<'EOF'
+/** @type {import('next').NextConfig} */
+const nextConfig = { reactStrictMode: true };
+export default nextConfig;
+EOF
+cat > /mnt/data/love-stars-complete/tsconfig.json <<'EOF'
+{"compilerOptions":{"target":"ES2017","lib":["dom","dom.iterable","esnext"],"allowJs":false,"skipLibCheck":true,"strict":true,"noEmit":true,"esModuleInterop":true,"module":"esnext","moduleResolution":"bundler","resolveJsonModule":true,"isolatedModules":true,"jsx":"preserve","incremental":true,"plugins":[{"name":"next"}]},"include":["next-env.d.ts","**/*.ts","**/*.tsx",".next/types/**/*.ts"],"exclude":["node_modules"]}
+EOF
+cat > /mnt/data/love-stars-complete/next-env.d.ts <<'EOF'
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+EOF
+cat > /mnt/data/love-stars-complete/app/layout.tsx <<'EOF'
+import './globals.css';
+import type { Metadata } from 'next';
+export const metadata: Metadata = { title:'Our Little Store ❤️', description:'A private Love Stars rewards store' };
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="ar" dir="rtl"><body>{children}</body></html>}
+EOF
+cat > /mnt/data/love-stars-complete/app/page.tsx <<'EOF'
+'use client';
+import {useEffect,useMemo,useState} from 'react';
+
+type Reward={id:number;icon:string;title:string;description:string;price:number;active:boolean};
+type Tx={id:number;amount:number;reason:string;date:string};
+type Order={id:number;items:number[];total:number;status:'pending'|'completed';date:string};
+const initialRewards:Reward[]=[
+{id:1,icon:'💋',title:'بوسة في فيديو',description:'بوسة مخصوص ليكي ❤️',price:20,active:true},
+{id:2,icon:'📖',title:'حدوتة ليكي',description:'يحكيلك حدوتة مخصوص',price:25,active:true},
+{id:3,icon:'🎤',title:'يغنيلك',description:'أغنية بصوته مخصوص ليكي',price:30,active:true},
+{id:4,icon:'💌',title:'رسالة حب',description:'رسالة مخصوص من القلب',price:15,active:true},
+];
+const seedTx:Tx[]=[{id:1,amount:4,reason:'فطار كويس ❤️',date:'2026-08-30T09:20:00'},{id:2,amount:2,reason:'روقتي الأوضة ✨',date:'2026-08-30T14:10:00'},{id:3,amount:3,reason:'حاجة حلوة عملتيها',date:'2026-08-30T19:30:00'}];
+export default function Home(){
+ const [balance,setBalance]=useState(87); const [weekly,setWeekly]=useState(87); const [rewards,setRewards]=useState(initialRewards); const [tx,setTx]=useState(seedTx); const [orders,setOrders]=useState<Order[]>([]); const [page,setPage]=useState<'home'|'store'|'orders'|'history'|'admin'>('home'); const [toast,setToast]=useState('');
+ const [admin,setAdmin]=useState(false); const [amount,setAmount]=useState(''); const [reason,setReason]=useState('');
+ useEffect(()=>{const raw=localStorage.getItem('love-stars-state'); if(raw){const s=JSON.parse(raw);setBalance(s.balance);setWeekly(s.weekly);setRewards(s.rewards);setTx(s.tx);setOrders(s.orders)}},[]);
+ useEffect(()=>{localStorage.setItem('love-stars-state',JSON.stringify({balance,weekly,rewards,tx,orders}))},[balance,weekly,rewards,tx,orders]);
+ useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),2200);return()=>clearTimeout(t)},[toast]);
+ const progress=Math.min(100,weekly/140*100); const activeRewards=useMemo(()=>rewards.filter(r=>r.active),[rewards]);
+ function addPoints(n:number,r:string){setBalance(b=>b+n);setWeekly(w=>Math.min(140,w+n));setTx(t=>[...t,{id:Date.now(),amount:n,reason:r,date:new Date().toISOString()}]);setToast(`اتضاف ${n} ⭐ ❤️`)}
+ function weeklyBonus(){addPoints(140,'Weekly Bonus — بداية أسبوع جديد');setWeekly(0);setToast('🎉 نزلت 140 ⭐ وبدأ أسبوع جديد')}
+ function redeem(r:Reward){if(balance<r.price)return;if(!confirm(`تصرفي ${r.price} ⭐ على ${r.title}؟`))return;setBalance(b=>b-r.price);setTx(t=>[...t,{id:Date.now(),amount:-r.price,reason:r.title,date:new Date().toISOString()}]);setOrders(o=>[...o,{id:1000+o.length+1,items:[r.id],total:r.price,status:'pending',date:new Date().toISOString()}]);setToast('❤️ طلبك وصل!');setPage('orders')}
+ function complete(id:number){setOrders(o=>o.map(x=>x.id===id?{...x,status:'completed'}:x));setToast('تم تنفيذ الجائزة ✓')}
+ function addManual(e:React.FormEvent){e.preventDefault();const n=Number(amount);if(n>0&&reason.trim()){addPoints(n,reason.trim());setAmount('');setReason('')}}
+ function resetDemo(){localStorage.removeItem('love-stars-state');location.reload()}
+ const orderLabel=(o:Order)=>o.status==='pending'?'Pending ⏳':'Completed ❤️';
+ return <div className="app">
+  <header><div><div className="brand">Our Little Store ❤️</div><div className="sub">عالم صغير معمول ليكم إنتوا الاتنين</div></div><div className="balance">{balance} ⭐</div></header>
+  <nav>{[['home','الرئيسية 🏠'],['store','الجوايز 🎁'],['orders','طلباتي ❤️'],['history','الحركات ⭐'],['admin','Admin 👑']].map(([id,label])=><button key={id} className={page===id?'active':''} onClick={()=>setPage(id as any)}>{label}</button>)}</nav>
+  {page==='home'&&<main><section className="card hero"><div className="eyebrow">أهلاً بيكي يا حبيبتي ❤️</div><div className="big">{balance} ⭐</div><div className="muted">رصيدك الحالي</div><div className="progress"><span style={{width:`${progress}%`}}/></div><div className="between"><b>{weekly} / 140 ⭐</b><span>{weekly>=140?'وصلتي للتارجت 🎉':`فاضلك ${140-weekly} ⭐`}</span></div><button className="primary" onClick={()=>setPage('store')}>شوفي الجوايز 🎁</button></section><section className="card"><h2>آخر الحركات</h2><TxList tx={tx.slice().reverse().slice(0,5)}/></section></main>}
+  {page==='store'&&<main><section className="card"><h1>Our Little Store 🎁</h1><p className="muted">اختاري الجايزة اللي نفسك فيها. النقاط بتتخصم وقت الـRedeem.</p><div className="grid">{activeRewards.map(r=><article className="reward" key={r.id}><div className="icon">{r.icon}</div><h3>{r.title}</h3><p>{r.description}</p><div className="price">{r.price} ⭐</div><button className="primary" disabled={balance<r.price} onClick={()=>redeem(r)}>{balance<r.price?'محتاجة Stars أكتر':'Redeem ❤️'}</button></article>)}</div></section></main>}
+  {page==='orders'&&<main><section className="card"><h1>طلباتي ❤️</h1>{orders.length===0?<Empty text="لسه مفيش طلبات. روحي اختاري جايزة 🎁"/>:orders.slice().reverse().map(o=><div className="order" key={o.id}><div><b>Order #{o.id}</b><div>{o.items.map(id=>{const r=rewards.find(x=>x.id===id)!;return <div key={id}>{r.icon} {r.title}</div>})}</div><small>{new Date(o.date).toLocaleString('ar-EG')}</small></div><div><span className="pill">{orderLabel(o)}</span><div className="price">{o.total} ⭐</div>{admin&&o.status==='pending'&&<button className="smallBtn" onClick={()=>complete(o.id)}>Complete ✓</button>}</div></div>)}</section></main>}
+  {page==='history'&&<main><section className="card"><h1>Stars History ⭐</h1><TxList tx={tx.slice().reverse()}/></section></main>}
+  {page==='admin'&&<main><section className="card"><div className="adminHead"><div><h1>Admin 👑</h1><p className="muted">لوحة التحكم الخاصة بيك.</p></div><button className="smallBtn" onClick={()=>setAdmin(!admin)}>{admin?'Admin ON':'دخول Admin'}</button></div>{admin?<><div className="stats"><div><b>{balance}</b><span>الرصيد ⭐</span></div><div><b>{weekly}/140</b><span>الأسبوع 🎯</span></div><div><b>{orders.filter(o=>o.status==='pending').length}</b><span>طلبات معلقة 📦</span></div></div><form onSubmit={addManual} className="form"><input type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} placeholder="عدد Stars"/><input value={reason} onChange={e=>setReason(e.target.value)} placeholder="السبب — فطار كويس"/><button className="primary">إضافة Stars ⭐</button></form><div className="quick"><button onClick={()=>addPoints(1,'Bonus')}>+1</button><button onClick={()=>addPoints(2,'Bonus')}>+2</button><button onClick={()=>addPoints(4,'Bonus')}>+4</button><button onClick={()=>addPoints(10,'Bonus')}>+10</button><button onClick={()=>addPoints(20,'Bonus')}>+20</button></div><button className="weekly" onClick={weeklyBonus}>🎉 Simulate Thursday +140 ⭐</button><h2>طلبات الجوايز</h2>{orders.length===0?<Empty text="مفيش طلبات لسه."/>:orders.slice().reverse().map(o=><div className="order" key={o.id}><div><b>#{o.id}</b> — {o.items.map(id=>rewards.find(r=>r.id===id)?.title).join(', ')}</div><div><span className="pill">{orderLabel(o)}</span>{o.status==='pending'&&<button className="smallBtn" onClick={()=>complete(o.id)}>Complete ✓</button>}</div></div>)}<button className="reset" onClick={resetDemo}>Reset Demo</button></>:<div className="locked">🔒<h2>Admin Area</h2><p>اضغط "دخول Admin" عشان تدخل لوحة التحكم.</p></div>}</section></main>}
+  {toast&&<div className="toast">{toast}</div>}
+ </div>
+}
+function TxList({tx}:{tx:Tx[]}){return tx.length?<div>{tx.map(t=><div className="tx" key={t.id}><div><b>{t.reason}</b><small>{new Date(t.date).toLocaleString('ar-EG')}</small></div><strong className={t.amount>0?'plus':'minus'}>{t.amount>0?'+':''}{t.amount} ⭐</strong></div>)}</div>:<Empty text="مفيش حركات لسه."/>}
+function Empty({text}:{text:string}){return <div className="empty">{text}</div>}
+EOF
+cat > /mnt/data/love-stars-complete/app/globals.css <<'EOF'
+:root{--bg:#fff8fb;--card:#fff;--text:#382832;--muted:#8d7b87;--pink:#e85d8c;--pink2:#f9dbe7;--line:#f0e3e9;--green:#55956c;--red:#c35a6c;--shadow:0 16px 45px rgba(88,42,66,.08)}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#fff 0,#fff8fb 42%,#fff3f8 100%);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}.app{max-width:920px;margin:auto;padding:22px 16px 50px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}.brand{font-size:24px;font-weight:900}.sub,.muted,small{color:var(--muted)}.sub{font-size:13px;margin-top:4px}.balance{background:#fff;border:1px solid var(--pink2);padding:11px 16px;border-radius:999px;font-weight:900;box-shadow:var(--shadow)}nav{display:flex;gap:8px;overflow:auto;margin-bottom:18px;padding-bottom:2px}nav button{white-space:nowrap;background:#fff;border:1px solid var(--line);color:var(--muted);padding:11px 14px;border-radius:13px;font-weight:700}nav button.active{background:var(--pink);color:#fff;border-color:var(--pink)}.card{background:var(--card);border:1px solid rgba(240,227,233,.8);border-radius:25px;padding:22px;box-shadow:var(--shadow);margin-bottom:16px}.hero{text-align:center;padding:34px 22px}.eyebrow{font-weight:800}.big{font-size:64px;font-weight:950;line-height:1.1;margin:10px 0}.progress{height:13px;background:#f4e8ed;border-radius:99px;overflow:hidden;margin:22px 0 8px}.progress span{display:block;height:100%;background:linear-gradient(90deg,#ed78a1,#e85d8c);border-radius:99px;transition:.3s}.between{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:20px}.primary,.smallBtn,.weekly,.reset,.quick button{border:0;border-radius:13px;font-weight:850;cursor:pointer}.primary{background:var(--pink);color:white;padding:12px 17px}.primary:disabled{opacity:.45;cursor:not-allowed}.smallBtn{background:var(--pink2);color:var(--pink);padding:8px 11px;margin-top:8px}.weekly{background:#382832;color:#fff;padding:12px 15px;margin:15px 0 25px}.reset{background:#f8e7ec;color:#9a5269;padding:9px 12px;margin-top:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}.reward{border:1px solid var(--line);border-radius:20px;padding:17px}.icon{font-size:43px}.reward h3{margin:8px 0}.reward p{color:var(--muted);min-height:38px}.price{font-size:17px;font-weight:950;margin:9px 0}.tx,.order{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 0;border-bottom:1px solid var(--line)}.tx:last-child,.order:last-child{border-bottom:0}.tx small{display:block;margin-top:3px}.plus{color:var(--green)}.minus{color:var(--red)}.order{align-items:flex-start}.order small{display:block;margin-top:8px}.pill{display:inline-block;background:#f7edf1;color:#725866;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:800}.adminHead{display:flex;justify-content:space-between;align-items:center}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.stats div{background:#fff8fb;border:1px solid var(--line);border-radius:18px;padding:15px}.stats b,.stats span{display:block}.stats b{font-size:24px}.stats span{font-size:12px;color:var(--muted);margin-top:4px}.form{display:grid;gap:10px}.form input{border:1px solid var(--line);padding:13px;border-radius:13px;outline:none}.form input:focus{border-color:var(--pink)}.quick{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.quick button{background:#f8e7ec;color:var(--pink);padding:9px 13px}.locked{text-align:center;padding:50px 10px;font-size:18px}.empty{text-align:center;padding:28px;color:var(--muted)}.toast{position:fixed;bottom:22px;left:22px;background:#382832;color:#fff;padding:13px 17px;border-radius:14px;box-shadow:var(--shadow);z-index:10}@media(max-width:600px){.app{padding:14px 11px 35px}.brand{font-size:20px}.big{font-size:51px}.stats{grid-template-columns:1fr}.card{padding:17px}.between{font-size:12px}}
+EOF
+cat > /mnt/data/love-stars-complete/.env.example <<'EOF'
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+CRON_SECRET=
+USER_ID=
+WEEKLY_BONUS=140
+# Notification provider values can be added later.
+EOF
+cat > /mnt/data/love-stars-complete/DEPLOY.md <<'EOF'
+# تشغيل النسخة
+
+## Prototype الآن
+1. `npm install`
+2. `npm run dev`
+3. افتح http://localhost:3000
+
+## تحويلها Production
+- اربط Supabase Auth + PostgreSQL بدل localStorage.
+- انقل addPoints/redeem/complete إلى server actions/API routes.
+- استخدم Vercel Cron كل خميس لتشغيل weekly bonus.
+- أضف WhatsApp Business API أو Telegram webhook بعد نجاح إنشاء Order.
+- لا تضع service-role key في المتصفح.
+
+## ملاحظة
+النسخة الحالية كاملة كـUI/UX وDemo قابل للتشغيل، لكنها لا تعتبر Production حتى يتم ربط قاعدة البيانات وحسابات الاستضافة وبيانات WhatsApp الخاصة بك.
+EOF
+cd /mnt/data && zip -qr love-stars-complete.zip love-stars-complete && ls -lh love-stars-complete.zip

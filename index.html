@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>nuno store </title>
+<style>
+:root{--bg:#fff7fb;--card:#fff;--ink:#322532;--muted:#907d89;--pink:#e85d8c;--pink2:#f8dbe6;--green:#62a27a;--red:#c95d70;--gold:#e8a93a;--shadow:0 12px 35px rgba(70,30,55,.09)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#fff 0,#fff7fb 48%,#fff0f6 100%);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer}.app{max-width:1050px;margin:auto;padding:16px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 0 14px}.brand{font-size:21px;font-weight:900}.balance{background:#fff;border:1px solid var(--pink2);border-radius:999px;padding:9px 14px;font-weight:900;white-space:nowrap}
+.nav{display:flex;gap:7px;overflow:auto;padding-bottom:4px;margin-bottom:16px}.nav button{border:0;background:#fff;color:var(--muted);padding:10px 13px;border-radius:12px;white-space:nowrap}.nav button.active{background:var(--pink);color:#fff}
+.page.hidden{display:none}.card{background:rgba(255,255,255,.94);border:1px solid #f4e5eb;border-radius:24px;padding:19px;box-shadow:var(--shadow);margin-bottom:15px}.hero{text-align:center;padding:30px 18px}.heart{font-size:42px}.big{font-size:54px;line-height:1;font-weight:950;margin:8px}.muted{color:var(--muted)}.small{font-size:13px}.progress{height:13px;background:#f1e5eb;border-radius:30px;overflow:hidden;margin:15px 0 8px}.progress i{display:block;height:100%;width:0;background:var(--pink);border-radius:30px;transition:.4s}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:13px}.reward{border:1px solid #f1e3e9;border-radius:19px;padding:16px;position:relative;background:#fff}.reward .icon{font-size:43px}.reward h3{margin:8px 0 4px}.price{font-weight:950;margin:9px 0}.btn{background:var(--pink);color:#fff;border:0;border-radius:12px;padding:11px 15px;font-weight:850}.btn.alt{background:#f9e4ec;color:var(--pink)}.btn.dark{background:var(--ink)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f1e8ec}.row:last-child{border-bottom:0}.plus{color:var(--green);font-weight:900}.minus{color:var(--red);font-weight:900}.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#f8edf2;font-size:12px}.pill.pending{color:#9b6d22;background:#fff5dc}.pill.done{color:#4b8b62;background:#eaf7ee}
+form{display:grid;gap:10px}input,textarea,select{width:100%;border:1px solid #eadde4;border-radius:12px;padding:11px 12px;background:#fff;outline:0}textarea{min-height:80px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--pink)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{padding:14px;border-radius:17px;background:#fff8fb;border:1px solid #f1e2e9;text-align:center}.stat b{font-size:24px;display:block}.empty{text-align:center;padding:25px;color:var(--muted)}
+.overlay{position:fixed;inset:0;background:rgba(35,20,30,.42);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.modal{background:#fff;border-radius:24px;max-width:430px;width:100%;padding:20px;box-shadow:0 20px 70px rgba(0,0,0,.18)}.toast{position:fixed;left:18px;bottom:18px;background:var(--ink);color:#fff;border-radius:14px;padding:12px 15px;z-index:30;box-shadow:var(--shadow)}
+.login{max-width:420px;margin:12vh auto}.logo{font-size:64px;text-align:center}
+hr{border:0;border-top:1px solid #f0e5ea;margin:18px 0}
+@media(max-width:650px){.app{padding:11px}.statgrid{grid-template-columns:1fr 1fr}.big{font-size:46px}.top{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div id="loginScreen" class="app login">
+  <section class="card">
+    <div class="logo">⭐</div>
+    <h1 style="text-align:center">nuno store</h1>
+    <p class="muted" style="text-align:center">عالم صغير ليكم إنتوا الاتنين </p>
+    <form onsubmit="login(event)">
+      <input id="loginName" placeholder="Username" required>
+      <input id="loginPass" type="password" placeholder="Password" required>
+      <button class="btn">دخول </button>
+    </form>
+    
+  </section>
+</div>
+
+<div id="site" class="app" style="display:none">
+  <header class="top">
+    <div class="brand">nuno store </div>
+    <div class="balance" id="topBalance">0 ⭐</div>
+  </header>
+  <nav class="nav" id="nav"></nav>
+
+  <main id="userHome" class="page">
+    <section class="card hero">
+      <div class="heart"></div>
+      <div class="muted">welcome nuno</div>
+      <div class="big" id="homeBalance">0 ⭐</div>
+      <div class="muted">Available Stars</div>
+      <div class="progress"><i id="bar"></i></div>
+      <b id="weekText">0 / 140 ⭐</b>
+      <p class="muted" id="weekHint"></p>
+      <div class="actions" style="justify-content:center"><button class="btn" onclick="go('store')">Shop Rewards </button><button class="btn alt" onclick="go('orders')">My Orders </button></div>
+    </section>
+    <section class="card"><h3>Recent Activity</h3><div id="recent"></div></section>
+  </main>
+
+  <main id="store" class="page" style="display:none">
+    <section class="card"><h2>nuno store </h2><p class="muted">Choose your reward </p><div class="grid" id="rewardGrid"></div></section>
+  </main>
+
+  <main id="orders" class="page" style="display:none">
+    <section class="card"><h2>My Orders </h2><div id="userOrders"></div></section>
+  </main>
+
+  <main id="history" class="page" style="display:none">
+    <section class="card"><h2>Stars History ⭐</h2><div id="history"></div></section>
+  </main>
+
+  <main id="adminHome" class="page" style="display:none">
+    <section class="card">
+      <h2>Admin </h2>
+      <div class="statgrid">
+        <div class="stat"><span class="muted small">الرصيد</span><b id="aBalance">0</b><span>⭐</span></div>
+        <div class="stat"><span class="muted small">هذا الأسبوع</span><b id="aWeek">0</b><span>/ 140</span></div>
+        <div class="stat"><span class="muted small">طلبات معلقة</span><b id="aPending">0</b></div>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Add Stars ⭐</h3>
+      <form onsubmit="changePoints(event)">
+        <input id="pointAmount" type="number" min="1" placeholder="Stars amount" required>
+        <input id="pointReason" placeholder="Reason" required>
+        <select id="pointAction">
+          <option value="add">Add Stars</option>
+          <option value="deduct">Deduct Stars</option>
+        </select>
+        <div class="actions"><button class="btn">Apply Change</button><button type="button" class="btn alt" onclick="addWeeklyBonus()">Add 140 — Thursday</button></div>
+      </form>
+      <p class="small muted">في النسخة Online هنخلي إضافة الـ140 تلقائية يوم الخميس بدون فتح الموقع.</p><div class="actions" style="margin-top:12px"><button type="button" class="btn dark" onclick="clearHistory()">Clear History</button></div>
+    </section>
+  </main>
+
+  <main id="adminRewards" class="page" style="display:none">
+    <section class="card">
+      <h2>Manage Rewards </h2>
+      <form onsubmit="saveReward(event)">
+        <input type="hidden" id="editRewardId">
+        <input id="rTitle" placeholder="اسم الجائزة" required>
+        <input id="rIcon" placeholder="Emoji — مثال " required>
+        <textarea id="rDesc" placeholder="وصف الجائزة"></textarea>
+        <input id="rPrice" type="number" min="1" placeholder="السعر بالـStars" required>
+        <div class="actions"><button class="btn">حفظ الجائزة</button><button type="button" class="btn alt" onclick="resetRewardForm()">Cancel</button></div>
+      </form>
+      <hr><div id="adminRewardList"></div>
+    </section>
+  </main>
+
+  <main id="adminOrders" class="page" style="display:none">
+    <section class="card"><h2>Reward Orders </h2><div id="adminOrderList"></div></section>
+  </main>
+</div>
+
+<div class="overlay" id="modal"><div class="modal" id="modalBody"></div></div>
+<div class="toast" id="toast" style="display:none"></div>
+
+<script>
+const STORAGE="our-little-store-v2";
+const initial={
+  balance:87, weekly:87, target:140,
+  rewards:[
+    {id:1,icon:"",title:"بوسة في فيديو",desc:"بوسة مخصوص ليكي ",price:20,active:true},
+    {id:2,icon:"",title:"حدوتة ليكي",desc:"يحكيلك حدوتة مخصوص",price:25,active:true},
+    {id:3,icon:"",title:"يغنيلك",desc:"أغنية بصوته مخصوص ليكي",price:30,active:true},
+    {id:4,icon:"",title:"رسالة حب",desc:"رسالة مخصوص من القلب",price:15,active:true}
+  ],
+  tx:[],orders:[],nextOrder:1001
+};
+let db=JSON.parse(localStorage.getItem(STORAGE)||"null")||initial;
+let role=null, page="home";
+
+function save(){localStorage.setItem(STORAGE,JSON.stringify(db));render()}
+function money(){return db.balance}
+function toast(s){const t=document.getElementById("toast");t.textContent=s;t.style.display="block";clearTimeout(window.tt);window.tt=setTimeout(()=>t.style.display="none",2200)}
+function login(e){e.preventDefault();const u=document.getElementById("loginName").value.trim().toLowerCase(),p=document.getElementById("loginPass").value;if(!((u==="nuno"&&p==="18/8")||(u==="omar"&&p==="omar123"))){toast("بيانات الدخول غلط");return}role=u;document.getElementById("loginScreen").style.display="none";document.getElementById("site").style.display="block";buildNav();go(role==="admin"?"admin":"home")}
+function logout(){role=null;document.getElementById("site").style.display="none";document.getElementById("loginScreen").style.display="block";document.getElementById("loginName").value="";document.getElementById("loginPass").value=""}
+function buildNav(){document.getElementById("nav").innerHTML=role==="user"?`
+<button data-p="home">Home</button><button data-p="store">Store </button><button data-p="orders">My Orders </button><button data-p="history">History ⭐</button><button onclick="logout()">Logout</button>`
+:`<button data-p="admin">Dashboard </button><button data-p="adminRewards">الجوايز </button><button data-p="adminOrders">الطلبات </button><button onclick="logout()">Logout</button>`;
+document.querySelectorAll("#nav [data-p]").forEach(b=>b.onclick=()=>go(b.dataset.p))}
+function go(p){page=p;document.querySelectorAll(".page").forEach(x=>x.style.display="none");const id=role==="user"?p==="home"?"userHome":p:p==="admin"?"adminHome":p;document.getElementById(id).style.display="block";document.querySelectorAll("#nav [data-p]").forEach(b=>b.classList.toggle("active",b.dataset.p===p));render()}
+
+function txHtml(t){return `<div class="row"><div><b>${esc(t.reason)}</b><div class="small muted">${fmt(t.date)}</div></div><div class="${t.amount>=0?"plus":"minus"}">${t.amount>=0?"+":""}${t.amount} ⭐</div></div>`}
+function fmt(d){return new Date(d).toLocaleString("ar-EG",{dateStyle:"medium",timeStyle:"short"})}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+
+function render(){
+document.getElementById("topBalance").textContent=db.balance+" ⭐";
+if(role==="user"){
+document.getElementById("homeBalance").textContent=db.balance+" ⭐";
+const pct=Math.min(100,db.weekly/db.target*100);document.getElementById("bar").style.width=pct+"%";document.getElementById("weekText").textContent=db.weekly+" / "+db.target+" ⭐";
+document.getElementById("weekHint").textContent=db.weekly>=db.target?" وصلتي للتارجت!":"فاضلك "+Math.max(0,db.target-db.weekly)+" ⭐";
+const tx=db.tx.slice().reverse();document.getElementById("recent").innerHTML=tx.length?tx.slice(0,5).map(txHtml).join(""):"<div class='empty'>لسه مفيش حركات </div>";
+document.getElementById("history").innerHTML=tx.length?tx.map(txHtml).join(""):"<div class='empty'>لسه مفيش حركات.</div>";
+const active=db.rewards.filter(r=>r.active);document.getElementById("rewardGrid").innerHTML=active.map(r=>`<article class="reward"><div class="icon">${r.icon}</div><h3>${esc(r.title)}</h3><p class="muted small">${esc(r.desc||"")}</p><div class="price">${r.price} ⭐</div><button class="btn" ${db.balance<r.price?"disabled":""} onclick="openRedeem(${r.id})">Redeem </button></article>`).join("");
+document.getElementById("userOrders").innerHTML=db.orders.length?db.orders.slice().reverse().map(orderHtml).join(""):"<div class='empty'>مفيش طلبات لسه </div>";
+}else{
+document.getElementById("aBalance").textContent=db.balance;document.getElementById("aWeek").textContent=db.weekly;document.getElementById("aPending").textContent=db.orders.filter(o=>o.status==="pending").length;
+document.getElementById("adminRewardList").innerHTML=db.rewards.map(r=>`<div class="row"><div><b>${r.icon} ${esc(r.title)}</b><div class="small muted">${r.price} ⭐ — ${r.active?"Active":"Hidden"}</div></div><div class="actions"><button class="btn alt" onclick="editReward(${r.id})">Edit</button><button class="btn alt" onclick="toggleReward(${r.id})">${r.active?"Hide":"Show"}</button></div></div>`).join("");
+document.getElementById("adminOrderList").innerHTML=db.orders.length?db.orders.slice().reverse().map(o=>orderHtml(o,true)).join(""):"<div class='empty'>مفيش طلبات.</div>";
+}}
+function orderHtml(o,admin=false){return `<div class="row"><div><b>Order #${o.id}</b><div>${o.items.map(i=>`${i.icon} ${esc(i.title)} — ${i.price} ⭐`).join("<br>")}</div><div class="small muted">${fmt(o.date)} · Total ${o.total} ⭐</div></div><div><span class="pill ${o.status==="completed"?"done":"pending"}">${o.status==="completed"?"Completed ":"Pending ⏳"}</span>${admin&&o.status==="pending"?`<br><button class="btn" style="margin-top:8px" onclick="complete(${o.id})">Completed </button>`:""}</div></div>`}
+
+function openRedeem(id){const r=db.rewards.find(x=>x.id===id);if(!r||db.balance<r.price)return;document.getElementById("modalBody").innerHTML=`<h2>${r.icon} ${esc(r.title)}</h2><p>${esc(r.desc||"")}</p><p><b>${r.price} ⭐</b> هيتخصموا من رصيدك.</p><p class="muted">الرصيد بعد الطلب: ${db.balance-r.price} ⭐</p><div class="actions"><button class="btn" onclick="redeem(${r.id})">Confirm Order </button><button class="btn alt" onclick="closeModal()">Cancel</button></div>`;document.getElementById("modal").style.display="flex"}
+function closeModal(){document.getElementById("modal").style.display="none"}
+async function redeem(id){
+  closeModal();
+  const r=db.rewards.find(x=>x.id===id);
+  if(!r||db.balance<r.price)return;
+
+  const order={
+    id:db.nextOrder++,
+    items:[{id:r.id,icon:r.icon,title:r.title,price:r.price}],
+    total:r.price,
+    status:"pending",
+    date:new Date().toISOString()
+  };
+
+  // Save the order locally for the prototype UI.
+  db.balance-=r.price;
+  db.tx.push({amount:-r.price,reason:r.title,type:"spend",date:new Date().toISOString()});
+  db.orders.push(order);
+  save();
+
+  // Send the order to our secure backend.
+  try{
+    const response=await fetch("/api/order",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        orderId:order.id,
+        reward:r.title,
+        price:r.price,
+        remainingBalance:db.balance,
+        date:order.date
+      })
+    });
+
+    if(!response.ok) throw new Error("Notification failed");
+    toast("Order sent");
+  }catch(err){
+    console.error(err);
+    toast("Order saved — Telegram notification failed");
+  }
+
+  go("orders");
+}
+function complete(id){const o=db.orders.find(x=>x.id===id);if(!o)return;o.status="completed";o.completedAt=new Date().toISOString();save();toast("Reward marked completed ")}
+function changePoints(e){e.preventDefault();const a=Number(document.getElementById("pointAmount").value),r=document.getElementById("pointReason").value.trim(),action=document.getElementById("pointAction").value;if(a<1||!r)return;if(action==="add"){db.balance+=a;db.weekly+=a;db.tx.push({amount:a,reason:r,type:"earn",date:new Date().toISOString()});toast("Added "+a+" Stars")}else{if(db.balance<a){toast("Not enough Stars");return}db.balance-=a;db.tx.push({amount:-a,reason:r,type:"adjustment",date:new Date().toISOString()});toast("Deducted "+a+" Stars")}e.target.reset();save()}
+function addWeeklyBonus(){db.balance+=140;db.tx.push({amount:140,reason:"Thursday Weekly Bonus",type:"bonus",date:new Date().toISOString()});db.weekly=0;save();toast(" اتضاف 140 ⭐ وبدأ أسبوع جديد")}
+function clearHistory(){if(!confirm("Clear all Stars history? This cannot be undone in this prototype."))return;db.tx=[];save();toast("History cleared")}
+function saveReward(e){e.preventDefault();const id=Number(document.getElementById("editRewardId").value),title=document.getElementById("rTitle").value.trim(),icon=document.getElementById("rIcon").value.trim(),desc=document.getElementById("rDesc").value.trim(),price=Number(document.getElementById("rPrice").value);if(!title||!icon||price<1)return;if(id){const r=db.rewards.find(x=>x.id===id);Object.assign(r,{title,icon,desc,price})}else db.rewards.push({id:Date.now(),title,icon,desc,price,active:true});resetRewardForm();save();toast("Reward saved ")}
+function resetRewardForm(){document.getElementById("editRewardId").value="";document.getElementById("rTitle").value="";document.getElementById("rIcon").value="";document.getElementById("rDesc").value="";document.getElementById("rPrice").value=""}
+function editReward(id){const r=db.rewards.find(x=>x.id===id);document.getElementById("editRewardId").value=r.id;document.getElementById("rTitle").value=r.title;document.getElementById("rIcon").value=r.icon;document.getElementById("rDesc").value=r.desc||"";document.getElementById("rPrice").value=r.price;window.scrollTo({top:0,behavior:"smooth"})}
+function toggleReward(id){const r=db.rewards.find(x=>x.id===id);r.active=!r.active;save();toast(r.active?"الجائزة ظهرت":"الجائزة اتخفت")}
+</script>
+</body>
+</html>
